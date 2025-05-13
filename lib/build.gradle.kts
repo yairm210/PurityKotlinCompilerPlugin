@@ -10,17 +10,17 @@ configure<de.jensklingenberg.gradle.TestCompilerExtension> {
 
 kotlin {
     jvm()
-    linuxX64("linux")
-    js()
+//    linuxX64("linux")
+//    js()
     sourceSets {
         val commonMain by getting {}
 
-        val jsMain by getting {
-
-            dependencies {
-
-            }
-        }
+//        val jsMain by getting {
+//
+//            dependencies {
+//
+//            }
+//        }
 
         val jvmMain by getting {
 
@@ -29,9 +29,9 @@ kotlin {
 
             }
         }
-        val linuxMain by getting {
-
-        }
+//        val linuxMain by getting {
+//
+//        }
 
     }
 }
