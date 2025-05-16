@@ -1,4 +1,5 @@
 /build
 /.gradle
+/*/build
+/*/.gradle
 .idea
-/lib/build/

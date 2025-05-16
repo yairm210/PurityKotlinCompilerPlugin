@@ -16,7 +16,7 @@ class HelloWorldGradleSubPlugin : KotlinCompilerPluginSupportPlugin {
     companion object {
         const val SERIALIZATION_GROUP_NAME = "de.jensklingenberg"
         const val ARTIFACT_NAME = "compiler-plugin"
-        const val VERSION_NUMBER = "0.0.1"
+        const val VERSION_NUMBER = "0.0.2"
     }
 
     private var gradleExtension : TestCompilerExtension = TestCompilerExtension()

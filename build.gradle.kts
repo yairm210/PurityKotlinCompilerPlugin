@@ -10,13 +10,11 @@ buildscript {
 
     dependencies {
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.25.3")
-        classpath("de.jensklingenberg:gradle-plugin:1.0.0")
     }
 }
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin apply false
 }
-apply(plugin = "compiler.gradleplugin.helloworld")
 
 System.setProperty("kotlin.compiler.execution.strategy", "in-process") // For debugging
 
