@@ -3,147 +3,131 @@ package de.jensklingenberg.transform
 import de.jensklingenberg.DebugLogger
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.wasm.ir2wasm.LocationType
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
-import org.jetbrains.kotlin.ir.declarations.*
-import org.jetbrains.kotlin.ir.expressions.*
-import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrSetValueImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrTypeOperatorCallImpl
-import org.jetbrains.kotlin.ir.util.*
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
+import org.jetbrains.kotlin.ir.declarations.IrVariable
+import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrSetValue
+import org.jetbrains.kotlin.ir.util.fileEntry
+import org.jetbrains.kotlin.ir.util.getAnnotation
+import org.jetbrains.kotlin.ir.util.getAnnotationArgumentValue
+import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.FqName
-import java.util.StringJoiner
+
+fun isMarkedAsPure(function: IrFunction): Boolean {
+    // Marked by @Contract(pure = true)
+    val pure = function.getAnnotationArgumentValue<Boolean>(FqName("org.jetbrains.annotations.Contract"), "pure")
+    if (pure == true) return true
+
+    // Simple values like int + int -> plus(int, int), are marked thus
+    val constEvaluation = function.getAnnotation(FqName("kotlin.internal.IntrinsicConstEvaluation"))
+    if (constEvaluation != null) return true
+
+    return false
+}
+
+
+private fun userDisplayFileLocation(function: IrFunction, expression: IrElement): String {
+    val location = function.fileEntry.getLineAndColumnNumbers(expression.startOffset)
+    // Location we get is 0-indexed but we need the 1-indexed line and column for click-to-get-to-location
+    val fileLocation = "file://${function.fileEntry.name}:${location.line + 1}:${location.column + 1}"
+    return fileLocation
+}
+
+enum class FunctionColoring{
+    None,
+    Readonly,
+    Pure
+}
+
+/** Warns every time a var is set a value, or an unpure function is called.
+ * Vars that are created within the function are OK to set */
+class CheckFunctionColoringVisitor(
+    private val function: IrFunction,
+    private val functionColoring: FunctionColoring,
+    private val messageCollector: MessageCollector,
+    
+) : IrElementVisitor<Unit, Unit> { // Returns whether this is an acceptable X function
+    var isReadonly = true
+    var isPure = true
+
+    // Iterate over IR tree and warn on each var set where the var is not created within this function
+    @OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
+    override fun visitSetValue(expression: IrSetValue, data: Unit) {
+        // Not sure if we can assume owner is set at this point :think:
+        val varValueDeclaration: IrValueDeclaration = expression.symbol.owner
+        if (varValueDeclaration is IrVariable && varValueDeclaration.isVar) {
+            // Check if the variable is created in this function
+            if (varValueDeclaration.parent != function) {
+                val fileLocation = userDisplayFileLocation(function, expression)
+                isReadonly = false
+                isPure = false
+
+                messageCollector.report(
+                    CompilerMessageSeverity.WARNING,
+                    "$fileLocation Function \"${function.name}\" is marked as $functionColoring but sets variable \"${varValueDeclaration.name}\""
+                )
+            }
+        }
+        super.visitSetValue(expression, data)
+    }
+
+    @OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
+    override fun visitCall(expression: IrCall, data: Unit) {
+        // Only accept calls to functions marked as pure or readonly
+        if (!isMarkedAsPure(expression.symbol.owner)) {
+            val fileLocation = userDisplayFileLocation(function, expression)
+            isPure = false
+            isReadonly = false
+            
+            messageCollector.report(
+                CompilerMessageSeverity.WARNING,
+                "$fileLocation Function \"${function.name}\" is marked as $functionColoring " +
+                        "but calls non-pure function \"${expression.symbol.owner.name}\""
+            )
+        }
+        
+        super.visitCall(expression, data) 
+    }
+
+    override fun visitElement(element: IrElement, data: Unit) {
+        element.acceptChildren(this, data)
+    }
+}
 
 internal class ElementTransformer(
     private val pluginContext: IrPluginContext,
     private val debugLogger: DebugLogger
 ) : IrElementTransformerVoidWithContext() {
-
-    //    override fun visitValueParameterNew(declaration: IrValueParameter): IrStatement {
-//        declaration.transform(CreateFuncTransformer(pluginContext,debugLogger), null)
-//        return super.visitValueParameterNew(declaration)
-//    }
-//
-//    override fun visitPropertyNew(declaration: IrProperty): IrStatement {
-//        declaration.transform(CreateFuncTransformer(pluginContext, debugLogger), null)
-//        return super.visitPropertyNew(declaration)
-//    }
-//
-//    override fun visitCall(expression: IrCall): IrExpression {
-//        expression.transform(CreateFuncTransformer(pluginContext, debugLogger), null)
-//        return super.visitCall(expression)
-//    }
-//
-//    override fun visitVariable(declaration: IrVariable): IrStatement {
-//        declaration.transform(CreateFuncTransformer(pluginContext, debugLogger), null)
-//        return super.visitVariable(declaration)
-//    }
-//
-//
-    override fun visitFunctionExpression(expression: IrFunctionExpression): IrExpression {
-        expression.transform(CreateFuncTransformer(pluginContext, debugLogger), null)
-        return super.visitFunctionExpression(expression)
-    }
-
-
-    fun isMarkedAsPure(function: IrFunction): Boolean {
-        // Marked by @Contract(pure = true)
-        val pure = function.getAnnotationArgumentValue<Boolean>(FqName("org.jetbrains.annotations.Contract"), "pure")
-        if (pure == true) return true
-
-        // Simple values like int + int -> plus(int, int), are marked thus
-        val constEvaluation = function.getAnnotation(FqName("kotlin.internal.IntrinsicConstEvaluation"))
-        if (constEvaluation != null) return true
-
-        return false
-    }
-
-    fun checkExpressionPurity(declaration: IrFunction, expression: IrStatement, depth: Int = 0): Boolean {
-
-        val start = LocationType.START.getLineAndColumnNumberFor(expression, declaration.fileEntry)
-        val end = LocationType.END.getLineAndColumnNumberFor(expression, declaration.fileEntry)
-        val fileLocation = "file://${declaration.fileEntry.name}:${start.line}:${start.column}"
-
-        // Cannot get report locations to work :/
-//                        location = CompilerMessageLocation.create(
-//                            expression.symbol.owner.fileEntry.name, start.line, start.column, null
-//                        )
-
-        val prefix = if (depth == 0) "" else {
-            val sb = StringBuilder()
-            for (i in 1..depth) sb.append('-')
-            sb.append("> ")
-            sb.toString()
-        }
-        debugLogger.messageCollector.report(
-            org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.WARNING,
-            prefix + "Function \"${declaration.name}\": ${expression::class.simpleName} visited"
-        )
-
-        if (expression is IrExpression && expression.isConstantLike) return true
-
-        fun warn(message: String) {
-            debugLogger.messageCollector.report(
-                org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.WARNING,
-                "$fileLocation Function ${declaration.name} is marked as pure, but $message"
-            )
-        }
-
-        return when (expression) {
-            // When you call a function that returns a value, 
-            // but you do not use that value
-            is IrTypeOperatorCallImpl -> checkExpressionPurity(declaration, expression.argument, depth + 1)
-            is IrCall -> { // We call another function directly, e.g. `x()`
-                val isPure = isMarkedAsPure(expression.symbol.owner)
-                        && expression.valueArguments.all { checkExpressionPurity(declaration, it!!) }
-
-                if (!isPure) warn("calls non-pure function ${expression.symbol.owner.name}")
-
-                isPure
-            }
-            is IrReturn -> checkExpressionPurity(declaration, expression.value, depth + 1) // We care about the returned value itself
-            is IrSetValueImpl -> { // e.g. `x = 4`
-                val callee = expression.symbol.owner
-                warn("sets value of \"${callee.name}\"")
-
-                false
-            }
-            is IrGetValueImpl -> { // e.g. "return a", the "a" part
-                val isVar = expression.symbol.owner.let { it is IrVariable && it.isVar }
-                if (isVar){
-                    warn("reads from variable \"${expression.symbol.owner.name}\"")
-                }
-                // Reading from vars is disallowed - they can change
-                return !isVar
-            }
-
-            else -> {
-                warn("expression of type ${expression::class.simpleName}")
+    
+    // These are created behind the scenes for every class, don't warn for them
+    val autogeneratedFunctions = setOf(
+        "<init>",
+        "equals",
+        "hashCode",
+        "toString"
+    )
+    override fun visitSimpleFunction(declaration: IrSimpleFunction): IrStatement {
+        if (isMarkedAsPure(declaration))
+            declaration.accept(CheckFunctionColoringVisitor(declaration, FunctionColoring.Pure, debugLogger.messageCollector), Unit)
+        else if (!autogeneratedFunctions.contains(declaration.name.asString())) {
+            val visitor = CheckFunctionColoringVisitor(declaration, FunctionColoring.None, MessageCollector.NONE)
+            declaration.accept(visitor, Unit)
+            if (visitor.isPure) {
+                val fileLocation = userDisplayFileLocation(declaration, declaration)
                 debugLogger.messageCollector.report(
-                    org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.WARNING,
-                    "$fileLocation Unhandled expression class "+expression::class.simpleName,
+                    CompilerMessageSeverity.WARNING,
+                    "$fileLocation Function \"${declaration.name}\" can be marked with @Contract(pure = true) to indicate it is pure."
                 )
-                false
             }
         }
-    }
-
-    override fun visitFunctionNew(declaration: IrFunction): IrStatement {
-
-        if (!isMarkedAsPure(declaration)) return super.visitFunctionNew(declaration)
-
-//        debugLogger.log("Function ${declaration.name} is pure")
-        debugLogger.messageCollector.report(
-            org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.WARNING,
-            "Function ${declaration.name} is pure"
-        )
-
-        for (expression in declaration.body?.statements ?: emptyList()) {
-            checkExpressionPurity(declaration, expression)
-        }
-
-        return super.visitFunctionNew(declaration)
+        
+        return super.visitSimpleFunction(declaration)
     }
 
 }

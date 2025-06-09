@@ -13,7 +13,7 @@ group = "de.jensklingenberg"
 version = "1.0.3"
 
 // Not sure if required - there's no Java :think:
-//java.targetCompatibility = JavaVersion.VERSION_1_8
+java.targetCompatibility = JavaVersion.VERSION_1_8
 
 // Make KAPT stubs Java 8 compatible
 kotlin {

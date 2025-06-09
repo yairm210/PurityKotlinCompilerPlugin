@@ -11,12 +11,6 @@ actual object Platform {
 }
 
 fun main() {
-    /**
-     * The compiler plugin will replace this with create<MyTest>(_MyTestProvider)
-     */
-    val myTest = create<MyTest>()
-    myTest.print()
-    
     var external = 3
 
     @Contract(pure = true)
@@ -27,26 +21,42 @@ fun main() {
         return external
     }
 
-    @Contract(pure = true)
+//    @Contract(pure = true)
     fun give(a: Int): Int {
         return a
     }
+
+//    @Contract(pure = true)
+//    fun untrustable(a: Int, b: Int): Int {
+//        external = 4
+//        return a
+//    }
     
-    fun untrustable(a: Int, b: Int): Int {
-        external = 4
-        return a
+//    @Contract(pure = true)
+//    fun getList() = listOf(1,2)
+
+    fun Int.self(): Int {
+        return this
     }
-    
-    fun justSideEffect(){
-        external = 4
-    }
-    
     @Contract(pure = true)
     fun add(a: Int, b: Int): Int {
         external = 4
-        untrustable(5, 6)
-        justSideEffect()
-        return a + give(b) + untrustable(5,6)
+//        untrustable(5, 6)
+//        getList()
+        return a.self() + give(b) + 5 //untrustable(5,6)
     }
+    
+    // NOT reported as a problem since the variable is internal
+    @Contract(pure = true)
+    fun setsInternalVariable(): Int {
+        var internal = 3
+        internal = 4
+        return internal
+    }
+    
+    fun unmarkedFunction(a: Int): Int {
+        return a * a
+    }
+    
     println(add(1,2))
 }
