@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.FqName
 
 // All the functions of these are readonly
-val wellKnownReadonlyFunctionClasses = setOf(
+val wellKnownReadonlyClasses = setOf(
     "kotlin.String",
     "kotlin.collections.List",
     "kotlin.collections.Set",
@@ -48,17 +48,18 @@ val wellKnownPureClasses = setOf(
 
 val x = listOf(1 .. 2)
 
+fun classMatches(function: IrFunction, wellKnownClasses: Set<String>): Boolean {
+    val parentClassIdentifier = function.parentClassOrNull
+        ?.let { it.packageFqName?.asString() + "." + it.name.asString() } ?: return false
+    return parentClassIdentifier in wellKnownClasses
+}
+
 fun isMarkedAsPure(function: IrFunction): Boolean {
     // Marked by @Contract(pure = true)
     val pure = function.getAnnotationArgumentValue<Boolean>(FqName("org.jetbrains.annotations.Contract"), "pure")
     if (pure == true) return true
 
-    // contained in well known pure classes
-    
-    val parentClassIdentifier = function.parentClassOrNull
-        ?.let { it.packageFqName?.asString() + "." + it.name.asString() }
-        
-    if (parentClassIdentifier in wellKnownPureClasses) return true
+    if (classMatches(function, wellKnownPureClasses)) return true
 
     // Simple values like int + int -> plus(int, int), are marked thus
     val constEvaluation = function.getAnnotation(FqName("kotlin.internal.IntrinsicConstEvaluation"))
@@ -72,6 +73,8 @@ fun isReadonly(function: IrFunction): Boolean {
     // Marked by @Contract(pure = true)
     val contractValue = function.getAnnotationArgumentValue<String>(FqName("org.jetbrains.annotations.Contract"), "value")
     if (contractValue == "readonly") return true
+    
+    if (classMatches(function, wellKnownReadonlyClasses)) return true
 
     return false
 }
@@ -94,14 +97,14 @@ enum class FunctionColoring{
  * Vars that are created within the function are OK to set */
 class CheckFunctionColoringVisitor(
     private val function: IrFunction,
-    private val functionColoring: FunctionColoring,
+    private val declaredFunctionColoring: FunctionColoring,
     private val messageCollector: MessageCollector,
     private val pureFunctionNames: Set<String>,
     ) : IrElementVisitor<Unit, Unit> { // Returns whether this is an acceptable X function
     var isReadonly = true
     var isPure = true
     
-    fun getFunctionColoring(): FunctionColoring {
+    fun actualFunctionColoring(): FunctionColoring {
         return when {
             isPure -> FunctionColoring.Pure
             isReadonly -> FunctionColoring.Readonly
@@ -114,40 +117,59 @@ class CheckFunctionColoringVisitor(
     override fun visitSetValue(expression: IrSetValue, data: Unit) {
         // Not sure if we can assume owner is set at this point :think:
         val varValueDeclaration: IrValueDeclaration = expression.symbol.owner
-        if (varValueDeclaration is IrVariable && varValueDeclaration.isVar) {
-            // Check if the variable is created in this function
-            if (varValueDeclaration.parent != function) {
-                val fileLocation = userDisplayFileLocation(function, expression)
-                isReadonly = false
-                isPure = false
+        
+        // If the variable is created in this function that's ok
+        if (varValueDeclaration is IrVariable && varValueDeclaration.isVar && varValueDeclaration.parent != function) {
+            val fileLocation = userDisplayFileLocation(function, expression)
+            isReadonly = false
+            isPure = false
 
-                messageCollector.report(
-                    CompilerMessageSeverity.WARNING,
-                    "$fileLocation Function \"${function.name}\" is marked as $functionColoring but sets variable \"${varValueDeclaration.name}\""
-                )
-            }
+            messageCollector.report(
+                CompilerMessageSeverity.WARNING,
+                "$fileLocation Function \"${function.name}\" is marked as $declaredFunctionColoring but sets variable \"${varValueDeclaration.name}\""
+            )
         }
         super.visitSetValue(expression, data)
     }
 
     override fun visitGetValue(expression: IrGetValue, data: Unit) {
+        val varValueDeclaration: IrValueDeclaration = expression.symbol.owner
+        
+        // If the variable is created in this function that's ok
+        if (varValueDeclaration is IrVariable && varValueDeclaration.isVar && varValueDeclaration.parent != function) {
+            val fileLocation = userDisplayFileLocation(function, expression)
+            isPure = false
+
+            if (declaredFunctionColoring == FunctionColoring.Pure) {
+                messageCollector.report(
+                    CompilerMessageSeverity.WARNING,
+                    "$fileLocation Function \"${function.name}\" is marked as $declaredFunctionColoring but gets variable \"${varValueDeclaration.name}\""
+                )
+            }
+        }
         super.visitGetValue(expression, data)
     }
-
+    
     @OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
     override fun visitCall(expression: IrCall, data: Unit) {
         // Only accept calls to functions marked as pure or readonly
-        if (!isMarkedAsPure(expression.symbol.owner) && !expression.symbol.hasEqualFqName(FqName("kotlin.io.println"))) {
+        val calledFunctionColoring =  when {
+            isMarkedAsPure(function) -> FunctionColoring.Pure
+            isReadonly(function) -> FunctionColoring.Readonly
+            else -> FunctionColoring.None
+        }
+        
+        
+        
+        if (calledFunctionColoring < FunctionColoring.Pure) isPure = false
+        if (calledFunctionColoring < FunctionColoring.Readonly) isReadonly = false
+        
+        if (declaredFunctionColoring < calledFunctionColoring) {
             val fileLocation = userDisplayFileLocation(function, expression)
-            isPure = false
-            isReadonly = false
-            
-            println()
-            
             messageCollector.report(
                 CompilerMessageSeverity.WARNING,
-                "$fileLocation Function \"${function.name}\" is marked as $functionColoring " +
-                        "but calls non-pure function \"${expression.symbol.owner.name}\""
+                "$fileLocation Function \"${function.name}\" is marked as $declaredFunctionColoring " +
+                        "but calls non-$calledFunctionColoring function \"${expression.symbol.owner.name}\""
             )
         }
         
@@ -196,7 +218,7 @@ internal class PurityElementTransformer(
         val visitor = CheckFunctionColoringVisitor(declaration, functionDeclaredColoring, messageCollector, pureFunctionNames.toSet())
         declaration.accept(visitor, Unit)
         
-        val actualColoring = visitor.getFunctionColoring()
+        val actualColoring = visitor.actualFunctionColoring()
         if (functionDeclaredColoring != actualColoring){
             
             // Don't warn for unmarked autogenerated functions - they are not under the user's control
@@ -205,18 +227,17 @@ internal class PurityElementTransformer(
             }
             
             val fileLocation = userDisplayFileLocation(declaration, declaration)
-            val message = if (functionDeclaredColoring < actualColoring) 
-                when (actualColoring) {
+            
+            // if equal, no message; If less that declared, we already warn for each individual violation
+            if (functionDeclaredColoring < actualColoring) {
+                val message = when (actualColoring) {
                     FunctionColoring.Pure -> "Function \"${declaration.name}\" can be marked with @Contract(pure = true) to indicate it is pure"
                     FunctionColoring.Readonly -> "Function \"${declaration.name}\" can be marked with @Contract(\"readonly\") to indicate it is readonly"
                     else -> throw Exception("Unexpected function coloring: $actualColoring")
                 }
-            else when (functionDeclaredColoring) {
-                FunctionColoring.Pure -> "Function \"${declaration.name}\" is marked as @Contract(pure = true) but is not pure"
-                FunctionColoring.Readonly -> "Function \"${declaration.name}\" is marked as @Contract(\"readonly\") but is not readonly"
-                else -> throw Exception("Unexpected function coloring: $actualColoring")
+
+                debugLogger.messageCollector.report(CompilerMessageSeverity.WARNING, "$fileLocation $message")
             }
-            debugLogger.messageCollector.report(CompilerMessageSeverity.WARNING, "$fileLocation $message")
         }
         
         return super.visitSimpleFunction(declaration)
