@@ -14,10 +14,17 @@ fun main() {
     var external = 3
 
     @Contract(pure = true)
-    fun returnExternal() = external
+    fun incorrectPureReturnsExternal() = external
 
+    // RIGHT: readonly, because reading external variables is allowed
+    @Contract("readonly")
+    fun correctReadonly(): Int {
+        return external
+    }
+    
+    // WRONG: not pure, because it reads an external variable
     @Contract(pure = true)
-    fun returnExternal2(): Int {
+    fun incorrectPure(): Int {
         return external
     }
 
@@ -54,6 +61,7 @@ fun main() {
         return internal
     }
     
+    @Contract("readonly")
     fun unmarkedFunction(a: Int): Int {
         return a * a
     }

@@ -5,8 +5,9 @@ import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 
-internal class ExampleIrGenerationExtension(private val debugLogger: DebugLogger) : IrGenerationExtension {
+internal class PurityIrGenerationExtension(private val debugLogger: DebugLogger,
+                                           private val pureFunctionNames:List<String>) : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-        moduleFragment.transform(ElementTransformer(pluginContext,debugLogger), null)
+        moduleFragment.transform(PurityElementTransformer(pluginContext, debugLogger, pureFunctionNames), null)
     }
 }

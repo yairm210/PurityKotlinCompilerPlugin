@@ -1,7 +1,7 @@
 package de.jensklingenberg
 
 import com.google.auto.service.AutoService
-import de.jensklingenberg.transform.ExampleIrGenerationExtension
+import de.jensklingenberg.transform.PurityIrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
@@ -30,8 +30,9 @@ class CommonComponentRegistrar : CompilerPluginRegistrar() {
         }
 
         val logging = true
+        
         IrGenerationExtension.registerExtension(
-            ExampleIrGenerationExtension(DebugLogger(logging, messageCollector))
+            PurityIrGenerationExtension(DebugLogger(logging, messageCollector), configuration[KEY_PURE_FUNCTION_NAMES] ?: listOf<String>())
         )
     }
 }
