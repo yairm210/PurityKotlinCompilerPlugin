@@ -34,7 +34,7 @@ allprojects {
     }
 }
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.0.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.1.21")
 }
 
 gradlePlugin {
