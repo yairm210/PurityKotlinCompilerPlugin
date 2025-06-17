@@ -14,6 +14,8 @@ enum class MyEnum {
     A, B
 }
 
+data class MyDataClass(val a: Int, val b: String)
+
 fun main() {
     var external = 3
 
