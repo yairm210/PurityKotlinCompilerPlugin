@@ -1,32 +1,16 @@
 
-<h1 align="center">KotlinCompilerPluginExample </h1>
 
-[![jCenter](https://img.shields.io/badge/Apache-2.0-green.svg
-)](https://github.com/Foso/KotlinReactNativeMpp/blob/master/LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-[![jCenter](https://img.shields.io/badge/Kotlin-2.0.0-green.svg
-)](https://github.com/Foso/Sheasy/blob/master/LICENSE)
+To publish the compiler plugin:
+- Update version in `compiler-plugin/build.gradle.kts` 
+- Update version in `java/de/jensklingenberg/gradle/HelloWorldGradleSubplugin.kt`
+- `./gradlew :compiler-plugin:publishToMavenLocal`
 
-
-
-## Introduction 🙋‍♂️
-
-This is an example project that shows how to create a Kotlin Compiler Plugin. At compile time a gradle plugin will trigger the compiler plugin. The plugin will print "Hello from" and the name of the file that is being compiled, as a compiler warning to the terminal log.
-
-<p>
-    <img src ="https://raw.githubusercontent.com/Foso/KotlinCompilerPluginExample/master/docs/screenshot.png" />
- 
-</p>
-
-### Show some :heart: and star the repo to support the project
-
-[![GitHub stars](https://img.shields.io/github/stars/Foso/KotlinCompilerPluginExample.svg?style=social&label=Star)](https://github.com/Foso/KotlinCompilerPluginExample) [![GitHub forks](https://img.shields.io/github/forks/Foso/KotlinCompilerPluginExample.svg?style=social&label=Fork)](https://github.com/Foso/KotlinCompilerPluginExample/fork) [![GitHub watchers](https://img.shields.io/github/watchers/Foso/KotlinCompilerPluginExample.svg?style=social&label=Watch)](https://github.com/Foso/KotlinCompilerPluginExample) [![Twitter Follow](https://img.shields.io/twitter/follow/jklingenberg_.svg?style=social)](https://twitter.com/jklingenberg_)
+To publish the gradle plugin:
+- Update version in `gradle-plugin/build.gradle.kts`
+- `./gradlew :gradle-plugin:build`
 
 
 ## Usage
-
-> :information_source: Please be aware that the Kotlin Compiler still doesn't have any stable API and there is no
-> backwards compatibility guaranteed. Kotlin versions above 1.9.23 can have a totally different API.
 
 * Inside the project folder run `./gradlew clean build` 
 

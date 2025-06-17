@@ -10,6 +10,10 @@ actual object Platform {
     actual val name: String = "JVM"
 }
 
+enum class MyEnum {
+    A, B
+}
+
 fun main() {
     var external = 3
 
