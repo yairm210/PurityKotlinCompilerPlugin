@@ -78,9 +78,6 @@ This project is licensed under Apache License, Version 2.0
 
 
 ## Acknowledgments
+
 Projects that helped me understand how to setup the project:
-* [kevinmost/debuglog](https://github.com/kevinmost/debuglog)
-* [ZacSweers/redacted-compiler-plugin](https://github.com/ZacSweers/redacted-compiler-plugin)
-* [hotchemi/kotlin-compiler-plugin-example
-](https://github.com/hotchemi/kotlin-compiler-plugin-example)
-* [Takhion/sample-kotlin-compiler-plugin](https://github.com/Takhion/sample-kotlin-compiler-plugin)
+* [Foso/KotlinCompilerPluginExample](https://github.com/Foso/KotlinCompilerPluginExample)

@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrSetValue
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.FqName
@@ -45,9 +46,7 @@ val wellKnownPureClasses = setOf(
     "kotlin.ranges.FloatRange",
     "kotlin.ranges.DoubleRange",
 )
-
-val x = listOf(1 .. 2)
-
+    
 fun classMatches(function: IrFunction, wellKnownClasses: Set<String>): Boolean {
     val parentClassIdentifier = function.parentClassOrNull
         ?.let { it.packageFqName?.asString() + "." + it.name.asString() } ?: return false
@@ -132,6 +131,7 @@ class CheckFunctionColoringVisitor(
         super.visitSetValue(expression, data)
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun visitGetValue(expression: IrGetValue, data: Unit) {
         val varValueDeclaration: IrValueDeclaration = expression.symbol.owner
         
