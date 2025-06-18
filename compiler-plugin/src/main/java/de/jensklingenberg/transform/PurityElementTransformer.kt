@@ -47,10 +47,22 @@ val wellKnownPureClasses = setOf(
     "kotlin.ranges.FloatRange",
     "kotlin.ranges.DoubleRange",
 )
+
+/** Classes that hold state internally.
+ * This means that if this function created that class, and it does not leak, it can call all functions on it and be considered pure
+*/
+val wellKnownInternalStateClasses = setOf(
+    "kotlin.collections.ArrayList",
+    "kotlin.collections.HashMap",
+    "kotlin.collections.LinkedHashMap",
+    "kotlin.collections.HashSet",
+    "kotlin.collections.LinkedHashSet",
+    "kotlin.text.StringBuilder",
+    "java.lang.StringBuilder",
+)
     
 fun classMatches(function: IrFunction, wellKnownClasses: Set<String>): Boolean {
-    val parentClassIdentifier = function.parentClassOrNull
-        ?.let { it.packageFqName?.asString() + "." + it.name.asString() } ?: return false
+    val parentClassIdentifier = function.parent.fqNameForIrSerialization.asString()
     return parentClassIdentifier in wellKnownClasses
 }
 
@@ -154,9 +166,23 @@ class CheckFunctionColoringVisitor(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun visitCall(expression: IrCall, data: Unit) {
         // Only accept calls to functions marked as pure or readonly
-        val calledFunction = expression.symbol.owner 
+        val calledFunction = expression.symbol.owner
+        
+        fun callerIsDeclaredInOurFunction() = expression.dispatchReceiver is IrGetValue &&
+                (expression.dispatchReceiver as IrGetValue).symbol.owner.parent == function
+        
+        if (calledFunction.name.asString() == "append") messageCollector.report(
+            CompilerMessageSeverity.WARNING,
+            "class: " + calledFunction.parent.fqNameForIrSerialization
+                        + " Class matches well-known internal state classes: "+classMatches(calledFunction, wellKnownInternalStateClasses) 
+                    + "Caller is declared in our function: " + callerIsDeclaredInOurFunction()
+            + "Is get value: " + (expression.dispatchReceiver is IrGetValue)
+            + "Owner name: " + (expression.dispatchReceiver as IrGetValue).symbol.owner.name.asString()
+        )
         val calledFunctionColoring =  when {
-            isMarkedAsPure(calledFunction) -> FunctionColoring.Pure
+            isMarkedAsPure(calledFunction) 
+                    || (classMatches(calledFunction, wellKnownInternalStateClasses) && callerIsDeclaredInOurFunction())
+                -> FunctionColoring.Pure
             isReadonly(calledFunction) -> FunctionColoring.Readonly
             else -> FunctionColoring.None
         }

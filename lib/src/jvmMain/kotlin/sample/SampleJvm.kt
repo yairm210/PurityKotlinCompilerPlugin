@@ -14,37 +14,46 @@ enum class MyEnum {
     A, B
 }
 
-data class MyDataClass(val a: Int, val b: String)
-
-interface MyInterface {
-    fun doSomething(): String
+@Contract(pure = true)
+fun javaCalls(): String {
+    val stringBuilder = StringBuilder()
+    stringBuilder.append("Hello, ")
+    return stringBuilder.append("World!").toString()
 }
 
-fun main() {
-    var external = 3
-
-    @Contract(pure = true)
-    fun incorrectPureReturnsExternal() = external
-
-    // RIGHT: readonly, because reading external variables is allowed
-    @Contract("readonly")
-    fun correctReadonly(): Int {
-        1.rangeTo(2)
-        val x = listOf(1,2)
-        x[0]
-        return external
-    }
-    
-    // WRONG: not pure, because it reads an external variable
-    @Contract(pure = true)
-    fun incorrectPure(): Int {
-        return external
-    }
 //
-    @Contract(pure = true)
-    fun give(a: Int): Int {
-        return a
-    }
+//data class MyDataClass(val a: Int, val b: String)
+//
+//interface MyInterface {
+//    fun doSomething(): String
+//}
+
+//
+//fun main() {
+//    var external = 3
+//
+//    
+//    fun incorrectPureReturnsExternal() = external
+//
+//    // RIGHT: readonly, because reading external variables is allowed
+//    @Contract("readonly")
+//    fun correctReadonly(): Int {
+//        1.rangeTo(2)
+//        val x = listOf(1,2)
+//        x[0]
+//        return external
+//    }
+//    
+//    // WRONG: not pure, because it reads an external variable
+//    @Contract(pure = true)
+//    fun incorrectPure(): Int {
+//        return external
+//    }
+////
+//    @Contract(pure = true)
+//    fun give(a: Int): Int {
+//        return a
+//    }
 
 //    @Contract(pure = true)
 //    fun untrustable(a: Int, b: Int): Int {
@@ -80,4 +89,4 @@ fun main() {
 //    }
 //    
 //    println(add(1,2))
-}
+//}
