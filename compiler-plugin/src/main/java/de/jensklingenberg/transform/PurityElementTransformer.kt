@@ -154,23 +154,23 @@ class CheckFunctionColoringVisitor(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun visitCall(expression: IrCall, data: Unit) {
         // Only accept calls to functions marked as pure or readonly
+        val calledFunction = expression.symbol.owner 
         val calledFunctionColoring =  when {
-            isMarkedAsPure(function) -> FunctionColoring.Pure
-            isReadonly(function) -> FunctionColoring.Readonly
+            isMarkedAsPure(calledFunction) -> FunctionColoring.Pure
+            isReadonly(calledFunction) -> FunctionColoring.Readonly
             else -> FunctionColoring.None
         }
-        
         
         
         if (calledFunctionColoring < FunctionColoring.Pure) isPure = false
         if (calledFunctionColoring < FunctionColoring.Readonly) isReadonly = false
         
-        if (declaredFunctionColoring < calledFunctionColoring) {
+        if (declaredFunctionColoring > calledFunctionColoring) {
             val fileLocation = userDisplayFileLocation(function, expression)
             messageCollector.report(
                 CompilerMessageSeverity.WARNING,
                 "$fileLocation Function \"${function.name}\" is marked as $declaredFunctionColoring " +
-                        "but calls non-$calledFunctionColoring function \"${expression.symbol.owner.name}\""
+                        "but calls non-$declaredFunctionColoring function \"${expression.symbol.owner.name}\""
             )
         }
         
