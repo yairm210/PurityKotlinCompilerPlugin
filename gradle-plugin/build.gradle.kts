@@ -9,8 +9,8 @@ plugins {
 }
 apply(plugin = "kotlin-kapt") // todo not sure if required, test without
 
-group = "de.jensklingenberg"
-version = "1.0.4"
+group = "il.yairm210.purity"
+version = "0.0.5"
 
 // Not sure if required - there's no Java :think:
 java.targetCompatibility = JavaVersion.VERSION_1_8

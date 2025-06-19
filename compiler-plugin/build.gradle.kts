@@ -24,8 +24,8 @@ mavenPublishing {
     publishToMavenCentral()
 }
 
-group = "de.jensklingenberg"
-version = "0.0.4"
+group = "il.yairm210.purity"
+version = "0.0.5"
 val autoService = "1.1.1"
 dependencies {
     compileOnly("com.google.auto.service:auto-service:$autoService")

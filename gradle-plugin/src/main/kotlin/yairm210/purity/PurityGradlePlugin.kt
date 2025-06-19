@@ -15,9 +15,9 @@ open class TestCompilerExtension {
 class PurityGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     companion object {
-        const val SERIALIZATION_GROUP_NAME = "de.jensklingenberg"
+        const val COMPILER_PLUGIN_GROUP_NAME = "il.yairm210.purity"
         const val ARTIFACT_NAME = "compiler-plugin"
-        const val VERSION_NUMBER = "0.0.4"
+        const val VERSION_NUMBER = "0.0.5"
     }
 
     private var gradleExtension : TestCompilerExtension = TestCompilerExtension()
@@ -45,7 +45,7 @@ class PurityGradlePlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
-        groupId = SERIALIZATION_GROUP_NAME,
+        groupId = COMPILER_PLUGIN_GROUP_NAME,
         artifactId = ARTIFACT_NAME,
         version = VERSION_NUMBER // remember to bump this version before any release!
     )
