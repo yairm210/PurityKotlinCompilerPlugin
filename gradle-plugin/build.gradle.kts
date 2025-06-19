@@ -42,7 +42,7 @@ gradlePlugin {
 
         create("simplePlugin") {
             id = "compiler.gradleplugin.test" // users will do `apply plugin: "compiler.plugin.helloworld"`
-            implementationClass = "de.jensklingenberg.gradle.HelloWorldGradleSubPlugin" // entry-point class
+            implementationClass = "yairm210.purity.PurityGradlePlugin" // entry-point class
         }
     }
 }

@@ -1,4 +1,4 @@
-package de.jensklingenberg.gradle
+package yairm210.purity
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -11,7 +11,7 @@ open class TestCompilerExtension {
     var enabled: Boolean = true
 }
 
-class HelloWorldGradleSubPlugin : KotlinCompilerPluginSupportPlugin {
+class PurityGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     companion object {
         const val SERIALIZATION_GROUP_NAME = "de.jensklingenberg"

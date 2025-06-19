@@ -1,12 +1,12 @@
+import yairm210.purity.TestCompilerExtension
+
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin
-//    id("de.jensklingenberg.gradle-plugin") version "1.0.3" // Use the version published to Maven Local
     id("compiler.gradleplugin.test") version "1.0.3" // Use the version published to Maven Local
 }
-//apply(plugin = "compiler.gradleplugin.test")
 
 
-configure<de.jensklingenberg.gradle.TestCompilerExtension> {
+configure<TestCompilerExtension> {
     enabled = true
 }
 

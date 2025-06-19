@@ -10,8 +10,8 @@ Mark pure functions using `@Contract(pure = true)`, and readonly functions using
 To test the plugin on /lib, run `./gradlew :lib:clean :lib:build` - the plugin is only active when the build cache is changed
 
 To publish the compiler plugin locally:
-- Update version in `compiler-plugin/build.gradle.kts` 
-- Update version in `java/de/jensklingenberg/gradle/HelloWorldGradleSubplugin.kt`
+- Update version in compiler plugin - `compiler-plugin/build.gradle.kts` 
+- Update version in gradle plugin - `PurityGradlePlugin.kt`
 - `./gradlew :compiler-plugin:publishToMavenLocal`
 
 To publish the gradle plugin locally:
@@ -39,10 +39,11 @@ plugins {
 
 `
 
-### 👷 Project Structure
-*  <kbd>lib</kbd> - A Kotlin Multiplatform project which applies a gradle plugin(compiler.plugin.helloworld) which triggers the compiler plugin.
-*  <kbd>compiler-plugin</kbd> - This module contains the Kotlin Compiler Plugin
-*  <kbd>gradle-plugin</kbd> - This module contains the gradle plugin which trigger the compiler plugin
+### Project Structure
+
+- <kbd>lib</kbd> - A Kotlin Multiplatform project which applies a gradle plugin (compiler.plugin.helloworld) which triggers the compiler plugin.
+- <kbd>compiler-plugin</kbd> - This module contains the Kotlin Compiler Plugin
+- <kbd>gradle-plugin</kbd> - This module contains the gradle plugin which trigger the compiler plugin
 
 
 ## Acknowledgments
