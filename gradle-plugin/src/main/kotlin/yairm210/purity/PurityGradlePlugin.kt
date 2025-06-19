@@ -11,6 +11,7 @@ open class TestCompilerExtension {
     var enabled: Boolean = true
 }
 
+@Suppress("unused")
 class PurityGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     companion object {

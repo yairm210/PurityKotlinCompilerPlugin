@@ -1,7 +1,7 @@
-package de.jensklingenberg
+package yairm210.purity
 
 import com.google.auto.service.AutoService
-import de.jensklingenberg.transform.PurityIrGenerationExtension
+import yairm210.purity.transform.PurityIrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector

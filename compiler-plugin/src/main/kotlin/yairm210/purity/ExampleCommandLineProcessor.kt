@@ -1,4 +1,4 @@
-package de.jensklingenberg
+package yairm210.purity
 
 import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption

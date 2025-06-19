@@ -1,6 +1,6 @@
-package de.jensklingenberg.transform
+package yairm210.purity.transform
 
-import de.jensklingenberg.DebugLogger
+import yairm210.purity.DebugLogger
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment

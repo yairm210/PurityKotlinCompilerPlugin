@@ -1,4 +1,4 @@
-package de.jensklingenberg
+package yairm210.purity
 
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector

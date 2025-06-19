@@ -1,6 +1,6 @@
-package de.jensklingenberg.transform
+package yairm210.purity.transform
 
-import de.jensklingenberg.DebugLogger
+import yairm210.purity.DebugLogger
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
@@ -171,14 +171,6 @@ class CheckFunctionColoringVisitor(
         fun callerIsDeclaredInOurFunction() = expression.dispatchReceiver is IrGetValue &&
                 (expression.dispatchReceiver as IrGetValue).symbol.owner.parent == function
         
-        if (calledFunction.name.asString() == "append") messageCollector.report(
-            CompilerMessageSeverity.WARNING,
-            "class: " + calledFunction.parent.fqNameForIrSerialization
-                        + " Class matches well-known internal state classes: "+classMatches(calledFunction, wellKnownInternalStateClasses) 
-                    + "Caller is declared in our function: " + callerIsDeclaredInOurFunction()
-            + "Is get value: " + (expression.dispatchReceiver is IrGetValue)
-            + "Owner name: " + (expression.dispatchReceiver as IrGetValue).symbol.owner.name.asString()
-        )
         val calledFunctionColoring =  when {
             isMarkedAsPure(calledFunction) 
                     || (classMatches(calledFunction, wellKnownInternalStateClasses) && callerIsDeclaredInOurFunction())
