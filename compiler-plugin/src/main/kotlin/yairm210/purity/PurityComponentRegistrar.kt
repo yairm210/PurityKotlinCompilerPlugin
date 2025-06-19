@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 @AutoService(CompilerPluginRegistrar::class)
-class CommonComponentRegistrar : CompilerPluginRegistrar() {
+class PurityComponentRegistrar : CompilerPluginRegistrar() {
 
     override val supportsK2: Boolean
         get() = true

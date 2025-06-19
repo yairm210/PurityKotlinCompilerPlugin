@@ -8,7 +8,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
 @AutoService(CommandLineProcessor::class) // don't forget!
-class ExampleCommandLineProcessor : CommandLineProcessor {
+class PurityCommandLineProcessor : CommandLineProcessor {
 
     override val pluginId: String = "helloWorldPlugin"
 
