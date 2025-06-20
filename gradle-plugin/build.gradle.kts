@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     kotlin("jvm") version("2.0.0")
     kotlin("kapt") version("2.0.0")
-    id("java-gradle-plugin")
-    id("com.gradle.plugin-publish") version "1.1.0"
-    `maven-publish`
+//    id("java-gradle-plugin")
+    id("com.gradle.plugin-publish") version "1.2.1"
+//    `maven-publish`
 }
 apply(plugin = "kotlin-kapt") // todo not sure if required, test without
 
@@ -38,11 +38,25 @@ dependencies {
 }
 
 gradlePlugin {
+    website = "https://github.com/yairm210/purity"
+    vcsUrl = "https://github.com/yairm210/purity.git"
+    
     plugins {
-
         create("simplePlugin") {
-            id = "compiler.gradleplugin.test" // users will do `apply plugin: "compiler.plugin.helloworld"`
+            id = "io.github.yairm210.purity-plugin" // users will do `apply plugin: "compiler.plugin.helloworld"`
+            displayName = "Kotlin Purity Plugin"
+            description = "A Kotlin compiler plugin that allows you to mark functions as pure and readonly, enabling optimizations and better code analysis."
             implementationClass = "yairm210.purity.PurityGradlePlugin" // entry-point class
+            tags = listOf("kotlin", "compiler-plugin", "purity", "pure-functions", "readonly")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "localPluginRepository"
+            url = uri("../local-plugin-repository")
         }
     }
 }

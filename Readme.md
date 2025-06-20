@@ -18,6 +18,10 @@ To publish the gradle plugin locally:
 - Update version in `gradle-plugin/build.gradle.kts`
 - `./gradlew :gradle-plugin:build`
 
+To publish the compiler plugin to Maven Central, with the correct env variables in place, run `./gradlew compiler-plugin:publishAndReleaseToMavenCentral --no-configuration-cache`
+
+To publish the gradle plugin to the Gradle Plugin Repository, with the correct env variables in place, run `./gradlew gradle-plugin:publishPlugins`
+
 In your other local project, add to settings.gradle.kts:
 
 ```kotlin

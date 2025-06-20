@@ -2,7 +2,7 @@ import yairm210.purity.TestCompilerExtension
 
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin
-    id("compiler.gradleplugin.test") version "1.0.3" // Use the version published to Maven Local
+    id("io.github.yairm210.purity-plugin") version "1.0.3" // Use the version published to Maven Local
 }
 
 

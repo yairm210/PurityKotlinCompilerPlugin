@@ -31,7 +31,7 @@ mavenPublishing {
         name = "Purity Compiler Plugin"
         description = "The Compiler plugin for the Purity, which allows you to mark Kotlin functions as pure and readonly"
         inceptionYear = "2025"
-        url = "https://github.com/yairm210/purity/"
+        url = "https://github.com/yairm210/purity"
         licenses {
             license {
                 name = "The Apache License, Version 2.0"
@@ -43,11 +43,11 @@ mavenPublishing {
             developer {
                 id = "yairm210"
                 name = "Yair Morgenstern"
-                url = "https://github.com/yairm210/"
+                url = "https://github.com/yairm210"
             }
         }
         scm {
-            url = "https://github.com/yairm210/purity/"
+            url = "https://github.com/yairm210/purity"
             connection = "scm:git:git://github.com/yairm210/purity.git"
             developerConnection = "scm:git:ssh://git@github.com/yairm210/purity.git"
         }
