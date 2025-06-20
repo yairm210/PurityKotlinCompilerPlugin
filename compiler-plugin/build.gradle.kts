@@ -1,13 +1,12 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     kotlin("jvm") version("2.0.0")
     kotlin("kapt") version("2.0.0")
-    id("com.vanniktech.maven.publish") version("0.23.1")
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version("0.32.0")
     signing
-
 }
 
 allprojects {
@@ -20,12 +19,42 @@ allprojects {
     }
 }
 
+group = "io.github.yairm210"
+version = "0.0.5-SNAPSHOT"
+
 mavenPublishing {
-    publishToMavenCentral()
+    coordinates("io.github.yairm210", "purity-compiler-plugin", "0.0.5")
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+
+    pom {
+        name = "Purity Compiler Plugin"
+        description = "The Compiler plugin for the Purity, which allows you to mark Kotlin functions as pure and readonly"
+        inceptionYear = "2025"
+        url = "https://github.com/yairm210/purity/"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "yairm210"
+                name = "Yair Morgenstern"
+                url = "https://github.com/yairm210/"
+            }
+        }
+        scm {
+            url = "https://github.com/yairm210/purity/"
+            connection = "scm:git:git://github.com/yairm210/purity.git"
+            developerConnection = "scm:git:ssh://git@github.com/yairm210/purity.git"
+        }
+    }
 }
 
-group = "il.yairm210.purity"
-version = "0.0.5"
+
 val autoService = "1.1.1"
 dependencies {
     compileOnly("com.google.auto.service:auto-service:$autoService")
@@ -35,59 +64,6 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.google.truth:truth:1.4.2")
     testImplementation(kotlin("reflect"))
-
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("default") {
-            from(components["java"])
-
-            pom {
-                name.set("compiler-plugin")
-                description.set("Hello World Compiler Plugin")
-                url.set("https://github.com/Foso/KotlinCompilerPluginExample")
-
-                licenses {
-                    license {
-                        name.set("Apache License 2.0")
-                        url.set("https://github.com/Foso/KotlinCompilerPluginExample/blob/master/LICENSE.txt")
-                    }
-                }
-                scm {
-                    url.set("https://github.com/Foso/KotlinCompilerPluginExample")
-                    connection.set("scm:git:git://github.com/Foso/KotlinCompilerPluginExample.git")
-                }
-                developers {
-                    developer {
-                        name.set("Developer Name")
-                        url.set("Developer URL")
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        if (
-            hasProperty("sonatypeUsername") &&
-            hasProperty("sonatypePassword") &&
-            hasProperty("sonatypeSnapshotUrl") &&
-            hasProperty("sonatypeReleaseUrl")
-        ) {
-            maven {
-                val url = when {
-                    "SNAPSHOT" in version.toString() -> property("sonatypeSnapshotUrl")
-                    else -> property("sonatypeReleaseUrl")
-                } as String
-                setUrl(url)
-                credentials {
-                    username = property("sonatypeUsername") as String
-                    password = property("sonatypePassword") as String
-                }
-            }
-        }
-    }
 }
 
 java {

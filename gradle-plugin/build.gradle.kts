@@ -9,7 +9,7 @@ plugins {
 }
 apply(plugin = "kotlin-kapt") // todo not sure if required, test without
 
-group = "il.yairm210.purity"
+group = "io.github.yairm210"
 version = "0.0.5"
 
 // Not sure if required - there's no Java :think:
